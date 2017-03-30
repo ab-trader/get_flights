@@ -3,6 +3,8 @@ import requests
 from lxml import html
 from collections import OrderedDict
 import argparse
+from datetime import datetime
+
 def parse(source,destination,date):
 	for i in range(5):
 		try:
@@ -10,13 +12,19 @@ def parse(source,destination,date):
 			response = requests.get(url)
 			parser = html.fromstring(response.text)
 			json_data_xpath = parser.xpath("//script[@id='cachedResultsJson']//text()")
-			raw_json =json.loads(json_data_xpath[0])
+			if json_data_xpath:
+				raw_json =json.loads(json_data_xpath[0])
+			else:
+				return {'error':'No Flights found'}
 			flight_data = json.loads(raw_json["content"])
+
 			flight_info  = OrderedDict() 
 			lists=[]
+
 			for i in flight_data['legs'].keys():
 				total_distance =  flight_data['legs'][i]["formattedDistance"]
 				exact_price = flight_data['legs'][i]['price']['totalPriceAsDecimal']
+
 				departure_location_airport = flight_data['legs'][i]['departureLocation']['airportLongName']
 				departure_location_city = flight_data['legs'][i]['departureLocation']['airportCity']
 				departure_location_airport_code = flight_data['legs'][i]['departureLocation']['airportCode']
@@ -31,10 +39,12 @@ def parse(source,destination,date):
 				flight_hour = flight_duration['hours']
 				flight_minutes = flight_duration['minutes']
 				flight_days = flight_duration['numOfDays']
+
 				if no_of_stops==0:
 					stop = "Nonstop"
 				else:
 					stop = str(no_of_stops)+' Stop'
+
 				total_flight_duration = "{0} days {1} hours {2} minutes".format(flight_days,flight_hour,flight_minutes)
 				departure = departure_location_airport+", "+departure_location_city
 				arrival = arrival_location_airport+", "+arrival_location_city
@@ -42,6 +52,7 @@ def parse(source,destination,date):
 				plane = carrier['plane']
 				plane_code = carrier['planeCode']
 				formatted_price = "{0:.2f}".format(exact_price)
+
 				if not airline_name:
 					airline_name = carrier['operatedBy']
 				
@@ -59,6 +70,7 @@ def parse(source,destination,date):
 											'arrival_time':arrival_time
 						}
 						timings.append(flight_timing)
+
 				flight_info={'stops':stop,
 					'ticket price':formatted_price,
 					'departure':departure,
@@ -77,17 +89,27 @@ def parse(source,destination,date):
 			print "Rerying..."
 			
 		return {"error":"failed to process the page",}
+
 if __name__=="__main__":
 	argparser = argparse.ArgumentParser()
 	argparser.add_argument('source',help = 'Source airport code')
 	argparser.add_argument('destination',help = 'Destination airport code')
 	argparser.add_argument('date',help = 'MM/DD/YYYY')
+
 	args = argparser.parse_args()
 	source = args.source
 	destination = args.destination
 	date = args.date
-	print "Fetching flight details"
-	scraped_data = parse(source,destination,date)
-	print "Writing data to output file"
-	with open('%s-%s-flight-results.json'%(source,destination),'w') as fp:
-	 	json.dump(scraped_data,fp,indent = 4)
+	today = datetime.now().date()
+	try:
+		entered_date = datetime.strptime(date,"%m/%d/%Y").date()
+		if  entered_date <= today:
+			print "The date entered has passed, please enter a valid date"
+		else:
+			print "Fetching flight details"
+			scraped_data = parse(source,destination,date)
+			print "Writing data to output file"
+			with open('%s-%s-flight-results.json'%(source,destination),'w') as fp:
+		 		json.dump(scraped_data,fp,indent = 4)
+	except ValueError:
+		print "Failed to parse the date"
