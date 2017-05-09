@@ -3,7 +3,6 @@ import requests
 from lxml import html
 from collections import OrderedDict
 import argparse
-from datetime import datetime
 
 def parse(source,destination,date):
 	for i in range(5):
@@ -12,10 +11,7 @@ def parse(source,destination,date):
 			response = requests.get(url)
 			parser = html.fromstring(response.text)
 			json_data_xpath = parser.xpath("//script[@id='cachedResultsJson']//text()")
-			if json_data_xpath:
-				raw_json =json.loads(json_data_xpath[0])
-			else:
-				return {'error':'No Flights found'}
+			raw_json =json.loads(json_data_xpath[0])
 			flight_data = json.loads(raw_json["content"])
 
 			flight_info  = OrderedDict() 
@@ -100,16 +96,8 @@ if __name__=="__main__":
 	source = args.source
 	destination = args.destination
 	date = args.date
-	today = datetime.now().date()
-	try:
-		entered_date = datetime.strptime(date,"%m/%d/%Y").date()
-		if  entered_date <= today:
-			print "The date entered has passed, please enter a valid date"
-		else:
-			print "Fetching flight details"
-			scraped_data = parse(source,destination,date)
-			print "Writing data to output file"
-			with open('%s-%s-flight-results.json'%(source,destination),'w') as fp:
-		 		json.dump(scraped_data,fp,indent = 4)
-	except ValueError:
-		print "Failed to parse the date"
+	print "Fetching flight details"
+	scraped_data = parse(source,destination,date)
+	print "Writing data to output file"
+	with open('%s-%s-flight-results.json'%(source,destination),'w') as fp:
+	 	json.dump(scraped_data,fp,indent = 4)
