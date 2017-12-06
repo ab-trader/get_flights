@@ -1,3 +1,11 @@
+# TO DO:
+# [ ] add flights back data retrieval
+# [ ] convert data to pandas DF
+# [ ] set flight to dates range
+# [ ] set flight back dates range
+# [ ] cycle thru date ranges, retreive data
+# [ ] sort by min ticket price
+
 import json
 import requests
 from lxml import html
@@ -7,7 +15,10 @@ import argparse
 def parse(source,destination,date):
 	for i in range(5):
 		try:
-			url = "https://www.expedia.com/Flights-Search?trip=oneway&leg1=from:{0},to:{1},departure:{2}TANYT&passengers=adults:1,children:0,seniors:0,infantinlap:Y&options=cabinclass%3Aeconomy&mode=search&origref=www.expedia.com".format(source,destination,date)
+			url = ("https://www.expedia.com/Flights-Search?trip=oneway&leg1=from:{0},to:{1},"
+                  "departure:{2}TANYT&passengers=adults:1,children:0,seniors:0,infantinlap:Y&"
+                  "options=cabinclass%3Aeconomy&mode=search&origref="
+                  "www.expedia.com".format(source,destination,date))
 			response = requests.get(url)
 			parser = html.fromstring(response.text)
 			json_data_xpath = parser.xpath("//script[@id='cachedResultsJson']//text()")
@@ -21,11 +32,11 @@ def parse(source,destination,date):
 				total_distance =  flight_data['legs'][i]["formattedDistance"]
 				exact_price = flight_data['legs'][i]['price']['totalPriceAsDecimal']
 
-				departure_location_airport = flight_data['legs'][i]['departureLocation']['airportLongName']
+				departure_location_airport = 'PDX' #flight_data['legs'][i]['departureLocation']['airportLongName']
 				departure_location_city = flight_data['legs'][i]['departureLocation']['airportCity']
 				departure_location_airport_code = flight_data['legs'][i]['departureLocation']['airportCode']
 				
-				arrival_location_airport = flight_data['legs'][i]['arrivalLocation']['airportLongName']
+				arrival_location_airport = 'MOW' #flight_data['legs'][i]['arrivalLocation']['airportLongName']
 				arrival_location_airport_code = flight_data['legs'][i]['arrivalLocation']['airportCode']
 				arrival_location_city = flight_data['legs'][i]['arrivalLocation']['airportCity']
 				airline_name = flight_data['legs'][i]['carrierSummary']['airlineName']

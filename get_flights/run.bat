@@ -1,0 +1,2 @@
+start /wait C:\python27\python.exe expedia_round_trip.py pdx 07/13/2017 07/29/2017 mow 08/17/2017 09/04/2017
+start /wait C:\python27\python.exe expedia_round_trip.py sea 07/13/2017 07/29/2017 mow 08/17/2017 09/04/2017
